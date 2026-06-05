@@ -1,0 +1,53 @@
+{
+  "organization": "AIBugfix",
+  "pipeline": "PhaseA_BugFix",
+  "target_repo": "https://github.com/rammoorthyraju/ltts-bmw-aibugfix-test.git",
+  "rca_example": "rca/APP-101.json",
+  "agents": [
+    {
+      "id": "component_mapper",
+      "display_name": "Component Mapper",
+      "model": "gpt-5-mini",
+      "system_prompt": "You are Component Mapper. Given RCA text, identify top 3 relevant files and module path. Return strict JSON with keys relevant_files, module_path, confidence_notes.",
+      "input_keys": ["defect_id", "root_cause", "repo_url", "app_id"],
+      "output_keys": ["relevant_files", "module_path", "file_contents", "status"],
+      "tools": ["repo_file_index", "semantic_code_search", "fetch_file_content"]
+    },
+    {
+      "id": "code_understander",
+      "display_name": "Code Understander",
+      "model": "gpt-5.1",
+      "system_prompt": "You are Code Understander. Build function-level understanding and risk map. Return strict JSON with keys code_summary, call_graph, risk_areas, error_handling_map.",
+      "input_keys": ["root_cause", "relevant_files", "file_contents", "module_path"],
+      "output_keys": ["code_summary", "call_graph", "risk_areas", "error_handling_map", "status"],
+      "tools": ["tree_sitter_parse", "call_graph_builder", "clangd_diagnostics"]
+    },
+    {
+      "id": "interface_analyst",
+      "display_name": "Interface Analyst",
+      "model": "gpt-5-mini",
+      "system_prompt": "You are Interface Analyst. Identify public contract impact risk. Return strict JSON with keys interface_contracts and breaking_change_risk.",
+      "input_keys": ["root_cause", "module_path", "file_contents"],
+      "output_keys": ["interface_contracts", "breaking_change_risk", "status"],
+      "tools": ["header_contract_scan", "idl_arxml_scan"]
+    },
+    {
+      "id": "bug_fixer",
+      "display_name": "Bug Fixer",
+      "model": "gpt-5.1",
+      "system_prompt": "You are Bug Fixer. Generate minimal unified diff only for the root cause. Return strict JSON with keys fix_diff, fix_explanation, fix_confidence, changed_files.",
+      "input_keys": ["defect_id", "root_cause", "file_contents", "error_handling_map", "interface_contracts"],
+      "output_keys": ["fix_diff", "fix_explanation", "fix_confidence", "branch_name", "status"],
+      "tools": ["generate_unified_diff", "git_apply_check", "git_apply"]
+    },
+    {
+      "id": "code_reviewer",
+      "display_name": "Code Reviewer",
+      "model": "gpt-5-mini",
+      "system_prompt": "You are Code Reviewer. Validate fix scope, safety, and static checks. Return strict JSON with keys review_status and review_comments.",
+      "input_keys": ["root_cause", "fix_diff", "relevant_files"],
+      "output_keys": ["review_status", "review_comments", "static_analysis_clean", "status"],
+      "tools": ["ruff_check", "mypy_check", "bandit_check", "cppcheck_optional"]
+    }
+  ]
+}
