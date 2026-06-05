@@ -1,0 +1,10 @@
+{
+  "defect_id": "APP-101",
+  "bug_description": "Music details page crashes when user opens details with no track selected.",
+  "root_cause": "selected_track can be None, but code accesses selected_track.title and selected_track.artist directly.",
+  "target": "infotainment_rca",
+  "app_id": "",
+  "ecu_id": "",
+  "rca_confidence": 0.92,
+  "rca_summary": "Null handling missing in music detail rendering path."
+}
